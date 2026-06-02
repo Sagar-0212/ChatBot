@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RIT College AI Chatbot{% endblock %}</title>
+    
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Boxicons for Premium Vector Icons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <!-- Project Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header Banner -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i class="bx bxs-graduation logo-icon"></i>
+                <div class="logo-text">
+                    <h1>RIT</h1>
+                    <span>AI Assistant</span>
+                </div>
+            </div>
+            <nav class="header-nav">
+                <a href="{{ url_for('chat.home') }}" class="nav-link {% if request.blueprint == 'chat' %}active{% endif %}">
+                    <i class="bx bx-chat"></i> Chatbot
+                </a>
+                {% if session.get('admin_logged_in') %}
+                <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.blueprint == 'admin' %}active{% endif %}">
+                    <i class="bx bx-dashboard"></i> Admin Panel
+                </a>
+                <a href="{{ url_for('admin.logout') }}" class="nav-btn logout-btn">
+                    <i class="bx bx-log-out"></i> Logout
+                </a>
+                {% else %}
+                <a href="{{ url_for('admin.login') }}" class="nav-link {% if request.path.startswith('/admin') %}active{% endif %}">
+                    <i class="bx bx-lock-alt"></i> Staff Login
+                </a>
+                {% endif %}
+            </nav>
+        </header>
+
+        <!-- Flash Messages -->
+        <div class="flash-messages-container">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="flash-message flash-{{ category }}">
+                            <i class="bx bx-info-circle flash-icon"></i>
+                            <span>{{ message }}</span>
+                            <i class="bx bx-x flash-close" onclick="this.parentElement.remove()"></i>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+
+        <!-- Main Content Area -->
+        <main class="app-main-content">
+            {% block content %}{% endblock %}
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 Rajarambapu Institute of Technology (RIT). Built with Python, Flask, and NLP.</p>
+        </footer>
+    </div>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

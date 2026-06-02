@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}RIT Student Assistant Chatbot{% endblock %}
+
+{% block content %}
+<div class="chat-wrapper">
+    <!-- Sidebar / Fast Help Panels -->
+    <aside class="chat-sidebar">
+        <div class="sidebar-header">
+            <h3><i class="bx bxs-zap"></i> Quick Enquiries</h3>
+            <p>Click on any common question below to get instant answers from the AI assistant.</p>
+        </div>
+        
+        <div class="popular-queries-list">
+            {% if popular_faqs %}
+                {% for faq in popular_faqs %}
+                    <button class="faq-quick-btn" onclick="askQuickQuestion('{{ faq.question | escape }}')">
+                        <span class="faq-category-badge">{{ faq.intent_category }}</span>
+                        <p class="faq-q-text">{{ faq.question }}</p>
+                        <i class="bx bx-chevron-right faq-arrow"></i>
+                    </button>
+                {% endfor %}
+            {% else %}
+                <p class="no-faqs">No FAQs available at the moment.</p>
+            {% endif %}
+        </div>
+
+        <div class="sidebar-info-card">
+            <h4><i class="bx bx-info-circle"></i> Quick Navigation</h4>
+            <ul>
+                <li><i class="bx bx-check"></i> Admissions (B.Tech, M.Tech, PhD)</li>
+                <li><i class="bx bx-check"></i> Timetable schedules</li>
+                <li><i class="bx bx-check"></i> Examination dates and halls</li>
+                <li><i class="bx bx-check"></i> Placements cell contact</li>
+            </ul>
+        </div>
+    </aside>
+
+    <!-- Main Chat Window -->
+    <section class="chat-container">
+        <!-- Chat Area Header -->
+        <div class="chat-header">
+            <div class="bot-profile">
+                <div class="bot-avatar">
+                    <i class="bx bx-bot"></i>
+                    <span class="status-indicator"></span>
+                </div>
+                <div class="bot-title">
+                    <h2>RIT AI Companion</h2>
+                    <p>Online | Resolving queries instantly</p>
+                </div>
+            </div>
+            <button id="btn-clear-chat" class="clear-chat-btn" title="Clear chat history">
+                <i class="bx bx-trash"></i> Clear Chat
+            </button>
+        </div>
+
+        <!-- Message Logs -->
+        <div id="chat-messages" class="chat-messages-log">
+            <!-- Welcome Message -->
+            <div class="message-row system-msg">
+                <div class="msg-avatar bot-avatar-mini">
+                    <i class="bx bx-bot"></i>
+                </div>
+                <div class="msg-content-wrapper">
+                    <div class="msg-bubble">
+                        <p>Welcome to Rajarambapu Institute of Technology (RIT)! I am your RIT AI Companion. Ask me about admissions, academic timetables, exam venues, hostels, library timings, or details on any department courses.</p>
+                        <span class="msg-timestamp">Just now</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Input Form -->
+        <form id="chat-input-form" class="chat-input-area">
+            <input 
+                type="text" 
+                id="student-message-input" 
+                placeholder="Ask me about exam schedules, fee structure, hostel rooms..." 
+                autocomplete="off" 
+                required
+            />
+            <button type="submit" id="btn-send-message" class="send-message-btn">
+                <span>Send</span>
+                <i class="bx bxs-paper-plane"></i>
+            </button>
+        </form>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

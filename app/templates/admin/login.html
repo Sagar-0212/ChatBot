@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Staff Login - RIT Command Center{% endblock %}
+
+{% block content %}
+<div class="login-wrapper">
+    <div class="login-card">
+        <div class="login-header">
+            <i class="bx bx-shield-quarter login-lock-icon"></i>
+            <h2>Staff Portal</h2>
+            <p>Access the RIT Chatbot administrative panels</p>
+        </div>
+
+        <form action="{{ url_for('admin.login') }}" method="POST" class="login-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <div class="input-with-icon">
+                    <i class="bx bx-user"></i>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        placeholder="Enter your admin username" 
+                        required 
+                        autocomplete="username"
+                    />
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label for="password">Password</label>
+                <div class="input-with-icon">
+                    <i class="bx bx-lock"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Enter password" 
+                        required 
+                        autocomplete="current-password"
+                    />
+                </div>
+            </div>
+
+            <button type="submit" class="login-submit-btn">
+                <span>Unlock Dashboard</span>
+                <i class="bx bx-key"></i>
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p><i class="bx bx-info-circle"></i> Unauthorized access attempts will be logged.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

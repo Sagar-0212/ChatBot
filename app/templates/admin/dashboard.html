@@ -1,0 +1,644 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - RIT Command Center{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- Sidebar Navigation -->
+    <aside class="dashboard-nav-panel">
+        <div class="admin-badge">
+            <i class="bx bxs-user-badge"></i>
+            <div>
+                <h4>{{ session.get('admin_username') }}</h4>
+                <span>{{ session.get('admin_role') | upper }}</span>
+            </div>
+        </div>
+
+        <nav class="db-nav-links">
+            <button class="db-tab-link active" onclick="switchTab(event, 'tab-queries')">
+                <i class="bx bx-chat"></i> Student Queries Log
+            </button>
+            <button class="db-tab-link" onclick="switchTab(event, 'tab-faqs')">
+                <i class="bx bx-list-ul"></i> FAQ Management
+            </button>
+            <button class="db-tab-link" onclick="switchTab(event, 'tab-students')">
+                <i class="bx bx-group"></i> Students Directory
+            </button>
+            <button class="db-tab-link" onclick="switchTab(event, 'tab-admissions')">
+                <i class="bx bx-book-open"></i> Admissions
+            </button>
+            <button class="db-tab-link" onclick="switchTab(event, 'tab-exams')">
+                <i class="bx bx-calendar-event"></i> Exam Schedules
+            </button>
+            <button class="db-tab-link" onclick="switchTab(event, 'tab-timetable')">
+                <i class="bx bx-time-five"></i> Class Timetable
+            </button>
+        </nav>
+
+        <div class="nlp-control-box">
+            <h4>NLP Training Center</h4>
+            <p>Modify FAQs, then retrain the underlying intent classifier model to improve accuracy.</p>
+            <button id="btn-retrain-model" class="retrain-model-btn" onclick="retrainModel()">
+                <i class="bx bx-sync"></i> Retrain NLP Engine
+            </button>
+            <span id="retrain-status" class="retrain-status"></span>
+        </div>
+    </aside>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-main">
+        <!-- Stats Summary Header -->
+        <section class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-queries"><i class="bx bx-message-rounded-dots"></i></div>
+                <div class="stat-data">
+                    <h3>{{ stats.total_queries }}</h3>
+                    <p>Total Student Queries</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-faqs"><i class="bx bx-question-mark"></i></div>
+                <div class="stat-data">
+                    <h3>{{ stats.total_faqs }}</h3>
+                    <p>Configured FAQs</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-students"><i class="bx bx-user"></i></div>
+                <div class="stat-data">
+                    <h3>{{ stats.total_students }}</h3>
+                    <p>Registered Students</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-admissions"><i class="bx bx-diploma"></i></div>
+                <div class="stat-data">
+                    <h3>{{ stats.total_admissions }}</h3>
+                    <p>Active Programs</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Panels -->
+        
+        <!-- 1. STUDENT QUERIES LOG -->
+        <section id="tab-queries" class="db-panel active">
+            <div class="panel-header">
+                <h2>Student Queries Log</h2>
+                <p>Live streams of conversation queries handled by the RIT AI Companion.</p>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User Message</th>
+                            <th>Bot Response</th>
+                            <th>Intent Detected</th>
+                            <th>Confidence</th>
+                            <th>Session ID</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if recent_queries %}
+                            {% for query in recent_queries %}
+                            <tr>
+                                <td>#{{ query.id }}</td>
+                                <td class="text-truncate" title="{{ query.user_message }}">{{ query.user_message }}</td>
+                                <td class="text-truncate" title="{{ query.bot_response }}">{{ query.bot_response }}</td>
+                                <td><span class="badge-intent">{{ query.intent_detected }}</span></td>
+                                <td>{{ (query.confidence_score * 100) | round(1) }}%</td>
+                                <td><code>{{ query.session_id }}</code></td>
+                                <td class="text-nowrap">{{ query.timestamp }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="no-records">No queries logged yet.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. FAQ MODERATION PANEL -->
+        <section id="tab-faqs" class="db-panel">
+            <div class="panel-header inline-header">
+                <div>
+                    <h2>FAQ Moderation Panel</h2>
+                    <p>Add, edit, or remove FAQs to shape your chatbot's intelligence database.</p>
+                </div>
+                <button class="add-faq-btn" onclick="openFaqModal()"><i class="bx bx-plus"></i> Add New FAQ</button>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Question</th>
+                            <th>Answer Snippet</th>
+                            <th>Intent Category</th>
+                            <th>Keywords</th>
+                            <th>Views</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if faqs %}
+                            {% for faq in faqs %}
+                            <tr id="faq-row-{{ faq.id }}">
+                                <td>{{ faq.id }}</td>
+                                <td class="faq-question">{{ faq.question }}</td>
+                                <td class="faq-answer text-truncate" title="{{ faq.answer }}">{{ faq.answer }}</td>
+                                <td class="faq-intent"><span class="badge-intent">{{ faq.intent_category }}</span></td>
+                                <td class="faq-keywords">{{ faq.keyword_tags }}</td>
+                                <td>{{ faq.view_count }}</td>
+                                <td class="actions-cell">
+                                    <button class="action-btn edit-btn" onclick="editFaq('{{ faq.id }}', '{{ faq.question | escape }}', '{{ faq.answer | escape }}', '{{ faq.intent_category | escape }}', '{{ faq.keyword_tags | escape }}')" title="Edit FAQ">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="deleteFaq('{{ faq.id }}')" title="Delete FAQ">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="no-records">No FAQs found in database.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 3. STUDENTS DIRECTORY -->
+        <section id="tab-students" class="db-panel">
+            <div class="panel-header">
+                <h2>Students Directory</h2>
+                <p>Lookup details of enrolled students at Rajarambapu Institute of Technology (RIT).</p>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Roll Number</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Year of Study</th>
+                            <th>Email Address</th>
+                            <th>Contact Number</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if students %}
+                            {% for student in students %}
+                            <tr>
+                                <td><code>{{ student.roll_no }}</code></td>
+                                <td><strong>{{ student.name }}</strong></td>
+                                <td>{{ student.department }}</td>
+                                <td>Year {{ student.year }}</td>
+                                <td><a href="mailto:{{ student.email }}">{{ student.email }}</a></td>
+                                <td>{{ student.phone }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="no-records">No students registered in database.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. ADMISSIONS -->
+        <section id="tab-admissions" class="db-panel">
+            <div class="panel-header inline-header">
+                <div>
+                    <h2>Admissions & Programs</h2>
+                    <p>Configure programs, details of annual fees, seat availability, eligibility guidelines.</p>
+                </div>
+                <button class="add-faq-btn" onclick="openAdmissionModal()"><i class="bx bx-plus"></i> Add New Program</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Program Name</th>
+                            <th>Eligibility Guidelines</th>
+                            <th>Annual Fees (INR)</th>
+                            <th>Seats</th>
+                            <th>Deadline</th>
+                            <th>Required Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if admissions %}
+                            {% for program in admissions %}
+                            <tr id="admission-row-{{ program.id }}">
+                                <td><strong>{{ program.program }}</strong></td>
+                                <td>{{ program.eligibility }}</td>
+                                <td>₹{{ "{:,.2f}".format(program.total_fees) }}</td>
+                                <td>{{ program.intake_seats }}</td>
+                                <td><span class="badge-deadline">{{ program.last_date }}</span></td>
+                                <td class="text-truncate" title="{{ program.documents_required }}">{{ program.documents_required }}</td>
+                                <td class="actions-cell">
+                                    <button class="action-btn edit-btn" onclick="editAdmission('{{ program.id }}', '{{ program.program | escape }}', '{{ program.eligibility | escape }}', '{{ program.total_fees }}', '{{ program.intake_seats }}', '{{ program.last_date | escape }}', '{{ program.documents_required | escape }}')" title="Edit Program">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="deleteAdmission('{{ program.id }}')" title="Delete Program">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="no-records">No admissions info configured.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. EXAM SCHEDULES -->
+        <section id="tab-exams" class="db-panel">
+            <div class="panel-header inline-header">
+                <div>
+                    <h2>Upcoming Examination Schedules</h2>
+                    <p>Verify exam dates, room allocations, durations, and exam categories.</p>
+                </div>
+                <button class="add-faq-btn" onclick="openExamModal()"><i class="bx bx-plus"></i> Add New Exam</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Exam Date</th>
+                            <th>Exam Time</th>
+                            <th>Venue / Room</th>
+                            <th>Duration</th>
+                            <th>Category</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if exams %}
+                            {% for exam in exams %}
+                            <tr id="exam-row-{{ exam.id }}">
+                                <td><strong>{{ exam.subject }}</strong></td>
+                                <td>{{ exam.department }}</td>
+                                <td>Year {{ exam.year_of_study }}</td>
+                                <td>{{ exam.exam_date }}</td>
+                                <td>{{ exam.exam_time }}</td>
+                                <td>{{ exam.venue }}</td>
+                                <td>{{ exam.duration_minutes }} mins</td>
+                                <td><span class="badge-exam">{{ exam.exam_type }}</span></td>
+                                <td class="actions-cell">
+                                    <button class="action-btn edit-btn" onclick="editExam('{{ exam.id }}', '{{ exam.subject | escape }}', '{{ exam.department | escape }}', '{{ exam.year_of_study }}', '{{ exam.exam_date | escape }}', '{{ exam.exam_time | escape }}', '{{ exam.venue | escape }}', '{{ exam.duration_minutes }}', '{{ exam.exam_type | escape }}')" title="Edit Exam">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="deleteExam('{{ exam.id }}')" title="Delete Exam">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="9" class="no-records">No examinations scheduled.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 6. CLASS TIMETABLE -->
+        <section id="tab-timetable" class="db-panel">
+            <div class="panel-header inline-header">
+                <div>
+                    <h2>Class Timetable Schedule</h2>
+                    <p>View daily schedule and professors assigned to each section.</p>
+                </div>
+                <button class="add-faq-btn" onclick="openTimetableModal()"><i class="bx bx-plus"></i> Add New Slot</button>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Day</th>
+                            <th>Department</th>
+                            <th>Year</th>
+                            <th>Subject</th>
+                            <th>Timing</th>
+                            <th>Room No</th>
+                            <th>Faculty Name</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if timetable %}
+                            {% for slot in timetable %}
+                            <tr id="timetable-row-{{ slot.id }}">
+                                <td><strong>{{ slot.day_of_week }}</strong></td>
+                                <td>{{ slot.department }}</td>
+                                <td>Year {{ slot.year_of_study }}</td>
+                                <td>{{ slot.subject }}</td>
+                                <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
+                                <td>{{ slot.room_no }}</td>
+                                <td>{{ slot.faculty_name }}</td>
+                                <td class="actions-cell">
+                                    <button class="action-btn edit-btn" onclick="editTimetable('{{ slot.id }}', '{{ slot.department | escape }}', '{{ slot.year_of_study }}', '{{ slot.day_of_week | escape }}', '{{ slot.subject | escape }}', '{{ slot.start_time | escape }}', '{{ slot.end_time | escape }}', '{{ slot.room_no | escape }}', '{{ slot.faculty_name | escape }}')" title="Edit Slot">
+                                        <i class="bx bx-edit"></i>
+                                    </button>
+                                    <button class="action-btn delete-btn" onclick="deleteTimetable('{{ slot.id }}')" title="Delete Slot">
+                                        <i class="bx bx-trash"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="8" class="no-records">No timetable entries available.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- ==========================================
+     MODALS FOR FAQ CRUD
+     ========================================== -->
+<div id="faq-modal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="modal-title">Add New FAQ</h3>
+            <button class="modal-close-btn" onclick="closeFaqModal()"><i class="bx bx-x"></i></button>
+        </div>
+        <form id="faq-form" onsubmit="saveFaq(event)">
+            <input type="hidden" id="faq-id" name="faq_id" />
+            
+            <div class="input-group">
+                <label for="faq-question">Question</label>
+                <textarea id="faq-question" name="question" rows="3" placeholder="What is the college library timings?" required></textarea>
+            </div>
+
+            <div class="input-group">
+                <label for="faq-answer">Answer</label>
+                <textarea id="faq-answer" name="answer" rows="4" placeholder="The Central Library is open from..." required></textarea>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="faq-intent">Intent Category</label>
+                    <select id="faq-intent" name="intent_category" required>
+                        <option value="student_query">student_query</option>
+                        <option value="admission">admission</option>
+                        <option value="exam">exam</option>
+                        <option value="timetable">timetable</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label for="faq-keywords">Keywords (Comma separated)</label>
+                    <input type="text" id="faq-keywords" name="keyword_tags" placeholder="library, timings, hours" />
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeFaqModal()">Cancel</button>
+                <button type="submit" class="btn-save">Save FAQ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODALS FOR ADMISSIONS CRUD
+     ========================================== -->
+<div id="admission-modal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="admission-modal-title">Add New Program</h3>
+            <button class="modal-close-btn" onclick="closeAdmissionModal()"><i class="bx bx-x"></i></button>
+        </div>
+        <form id="admission-form" onsubmit="saveAdmission(event)">
+            <input type="hidden" id="admission-id" name="admission_id" />
+            
+            <div class="input-group">
+                <label for="admission-program">Program Name</label>
+                <input type="text" id="admission-program" name="program" placeholder="e.g. B.Tech Computer Science and Engineering" required />
+            </div>
+
+            <div class="input-group">
+                <label for="admission-eligibility">Eligibility Guidelines</label>
+                <textarea id="admission-eligibility" name="eligibility" rows="2" placeholder="e.g. 10+2 with PCM (min 60%)" required></textarea>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="admission-fees">Annual Fees (INR)</label>
+                    <input type="number" step="0.01" id="admission-fees" name="total_fees" placeholder="e.g. 185000" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="admission-seats">Intake Seats</label>
+                    <input type="number" id="admission-seats" name="intake_seats" placeholder="e.g. 120" required />
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="admission-lastdate">Application Deadline</label>
+                    <input type="text" id="admission-lastdate" name="last_date" placeholder="e.g. 2026-07-31" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="admission-docs">Required Documents (Comma separated)</label>
+                    <input type="text" id="admission-docs" name="documents_required" placeholder="Marksheets, Scorecard, Photos" required />
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeAdmissionModal()">Cancel</button>
+                <button type="submit" class="btn-save">Save Program</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODALS FOR EXAMS CRUD
+     ========================================== -->
+<div id="exam-modal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="exam-modal-title">Schedule Exam</h3>
+            <button class="modal-close-btn" onclick="closeExamModal()"><i class="bx bx-x"></i></button>
+        </div>
+        <form id="exam-form" onsubmit="saveExam(event)">
+            <input type="hidden" id="exam-id" name="exam_id" />
+            
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="exam-subject">Subject</label>
+                    <input type="text" id="exam-subject" name="subject" placeholder="e.g. Data Structures" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="exam-department">Department</label>
+                    <select id="exam-department" name="department" required>
+                        <option value="CSE">CSE</option>
+                        <option value="IT">IT</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Electronics">Electronics</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="exam-year">Year of Study</label>
+                    <input type="number" min="1" max="4" id="exam-year" name="year_of_study" placeholder="e.g. 2" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="exam-type">Exam Category / Type</label>
+                    <input type="text" id="exam-type" name="exam_type" placeholder="e.g. End-Semester" required />
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="exam-date">Exam Date</label>
+                    <input type="text" id="exam-date" name="exam_date" placeholder="e.g. 2026-06-15" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="exam-time">Exam Time</label>
+                    <input type="text" id="exam-time" name="exam_time" placeholder="e.g. 10:00" required />
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="exam-venue">Venue / Room</label>
+                    <input type="text" id="exam-venue" name="venue" placeholder="e.g. Block A - Hall 202" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="exam-duration">Duration (Minutes)</label>
+                    <input type="number" id="exam-duration" name="duration_minutes" placeholder="e.g. 180" required />
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeExamModal()">Cancel</button>
+                <button type="submit" class="btn-save">Schedule Exam</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ==========================================
+     MODALS FOR TIMETABLE CRUD
+     ========================================== -->
+<div id="timetable-modal" class="modal-backdrop">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="timetable-modal-title">Add Class Slot</h3>
+            <button class="modal-close-btn" onclick="closeTimetableModal()"><i class="bx bx-x"></i></button>
+        </div>
+        <form id="timetable-form" onsubmit="saveTimetable(event)">
+            <input type="hidden" id="timetable-id" name="slot_id" />
+            
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="timetable-subject">Subject</label>
+                    <input type="text" id="timetable-subject" name="subject" placeholder="e.g. Operating Systems" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="timetable-department">Department</label>
+                    <select id="timetable-department" name="department" required>
+                        <option value="CSE">CSE</option>
+                        <option value="IT">IT</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                        <option value="Electrical">Electrical</option>
+                        <option value="Electronics">Electronics</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="timetable-year">Year of Study</label>
+                    <input type="number" min="1" max="4" id="timetable-year" name="year_of_study" placeholder="e.g. 3" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="timetable-day">Day of Week</label>
+                    <select id="timetable-day" name="day_of_week" required>
+                        <option value="Monday">Monday</option>
+                        <option value="Tuesday">Tuesday</option>
+                        <option value="Wednesday">Wednesday</option>
+                        <option value="Thursday">Thursday</option>
+                        <option value="Friday">Friday</option>
+                        <option value="Saturday">Saturday</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="timetable-start">Start Time</label>
+                    <input type="text" id="timetable-start" name="start_time" placeholder="e.g. 09:00" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="timetable-end">End Time</label>
+                    <input type="text" id="timetable-end" name="end_time" placeholder="e.g. 10:30" required />
+                </div>
+            </div>
+
+            <div class="form-row-2">
+                <div class="input-group">
+                    <label for="timetable-room">Room No / Lab</label>
+                    <input type="text" id="timetable-room" name="room_no" placeholder="e.g. Block A - 301" required />
+                </div>
+
+                <div class="input-group">
+                    <label for="timetable-faculty">Faculty Name</label>
+                    <input type="text" id="timetable-faculty" name="faculty_name" placeholder="e.g. Prof. Nair" required />
+                </div>
+            </div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-cancel" onclick="closeTimetableModal()">Cancel</button>
+                <button type="submit" class="btn-save">Save Slot</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+{% endblock %}

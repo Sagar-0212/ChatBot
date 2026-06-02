@@ -1,0 +1,39 @@
+# Local environment configuration
+.env
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# SQLite Database files
+*.db
+*.sqlite3
+
+# Trained ML Model files
+*.pkl
+*.joblib
+
+# Logs
+*.log
+
+# IDE files
+.vscode/
+.idea/
+
+# Frontend dependency & build outputs
+node_modules/
+dist/
+build/
+
+# Temporary and backup files
+*.tmp
+*.bak
+.pytest_cache/
