@@ -80,12 +80,16 @@ def init_database():
     print("[Success] Table 'admissions' created or verified.")
 
     # exams
+    # Drops table if schema is old to ensure clean rebuild during bootstrapping/development
+    cursor.execute("DROP TABLE IF EXISTS exams;")
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS exams (
+    CREATE TABLE exams (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        subject_code TEXT NOT NULL,
         subject TEXT NOT NULL,
         department TEXT NOT NULL,
         year_of_study INTEGER NOT NULL CHECK(year_of_study BETWEEN 1 AND 4),
+        semester INTEGER NOT NULL CHECK(semester BETWEEN 1 AND 8),
         exam_date TEXT NOT NULL,
         exam_time TEXT NOT NULL,
         venue TEXT NOT NULL,
@@ -93,14 +97,17 @@ def init_database():
         exam_type TEXT NOT NULL
     );
     """)
-    print("[Success] Table 'exams' created or verified.")
+    print("[Success] Table 'exams' created and verified.")
 
     # timetable
+    # Drops table if schema is old to ensure clean rebuild during bootstrapping/development
+    cursor.execute("DROP TABLE IF EXISTS timetable;")
     cursor.execute("""
-    CREATE TABLE IF NOT EXISTS timetable (
+    CREATE TABLE timetable (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         department TEXT NOT NULL,
         year_of_study INTEGER NOT NULL CHECK(year_of_study BETWEEN 1 AND 4),
+        semester INTEGER NOT NULL CHECK(semester BETWEEN 1 AND 8),
         day_of_week TEXT NOT NULL,
         subject TEXT NOT NULL,
         start_time TEXT NOT NULL,
@@ -109,7 +116,7 @@ def init_database():
         faculty_name TEXT NOT NULL
     );
     """)
-    print("[Success] Table 'timetable' created or verified.")
+    print("[Success] Table 'timetable' created and verified.")
 
     # faq
     cursor.execute("""
@@ -161,10 +168,8 @@ def init_database():
             admins
         )
         print("[Seeded] Seeded 5 administrative users into 'admin_users'.")
-    else:
-        print("[Skipped] 'admin_users' is already seeded.")
 
-    # Seeding students (CSE, IT, Mechanical, Civil, Electrical, Electronics)
+    # Seeding students
     if is_empty("students"):
         students = [
             ("Rajesh Kumar", "RIT-2023-CSE-045", "CSE", 3, "rajesh.kumar@ritindia.edu", "9876543210"),
@@ -178,10 +183,8 @@ def init_database():
             students
         )
         print("[Seeded] Seeded 5 students into 'students'.")
-    else:
-        print("[Skipped] 'students' is already seeded.")
 
-    # Seeding admissions (B.Tech, MBA, MCA)
+    # Seeding admissions
     if is_empty("admissions"):
         admissions = [
             ("B.Tech Computer Science and Engineering", "10+2 with Physics, Chemistry, Mathematics (min 60%), JEE Main / MHT-CET / RIT Entrance score", 185000.0, 120, "2026-07-31", "10th & 12th Marksheet, Entrance Score Card, Transfer Certificate, Passport Photos"),
@@ -195,44 +198,46 @@ def init_database():
             admissions
         )
         print("[Seeded] Seeded 5 academic programs into 'admissions'.")
-    else:
-        print("[Skipped] 'admissions' is already seeded.")
 
-    # Seeding exams (CSE, Electronics, Mechanical, Electrical)
-    if is_empty("exams"):
-        exams = [
-            ("Data Structures & Algorithms", "CSE", 2, "2026-06-15", "10:00", "Block A - Hall 202", 180, "End-Semester"),
-            ("Object Oriented Programming", "CSE", 1, "2026-06-16", "14:00", "Block A - Hall 101", 180, "End-Semester"),
-            ("Microprocessors & Microcontrollers", "Electronics", 3, "2026-06-17", "10:00", "Block B - Lab 3", 120, "Mid-Term"),
-            ("Thermodynamics", "Mechanical", 2, "2026-06-18", "10:00", "Block C - Lecture Room 5", 180, "End-Semester"),
-            ("Electrical Machines", "Electrical", 3, "2026-06-19", "14:00", "Block B - Hall 104", 180, "End-Semester")
-        ]
-        cursor.executemany(
-            "INSERT INTO exams (subject, department, year_of_study, exam_date, exam_time, venue, duration_minutes, exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            exams
-        )
-        print("[Seeded] Seeded 5 examination schedules into 'exams'.")
-    else:
-        print("[Skipped] 'exams' is already seeded.")
+    # Seeding exams (including subject_code and semester)
+    # Target dataset for CSE, Year 2, Semester 4
+    exams = [
+        ("CS-204", "Computer Networks", "CSE", 2, 4, "2026-06-15", "10:00", "Block A - Hall 202", 180, "End-Semester"),
+        ("CS-205", "Operating Systems", "CSE", 2, 4, "2026-06-16", "14:00", "Block A - Hall 101", 180, "End-Semester"),
+        ("CS-206", "Database Management Systems", "CSE", 2, 4, "2026-06-17", "10:00", "Block A - Hall 202", 180, "End-Semester"),
+        ("CS-207", "Software Engineering", "CSE", 2, 4, "2026-06-18", "14:00", "Block A - Hall 102", 180, "End-Semester"),
+        ("EC-301", "Microprocessors & Microcontrollers", "Electronics", 3, 6, "2026-06-19", "10:00", "Block B - Lab 3", 120, "Mid-Term"),
+        ("ME-203", "Fluid Mechanics", "Mechanical", 2, 4, "2026-06-20", "10:00", "Block C - Room 301", 180, "End-Semester"),
+        ("EE-305", "Electrical Machines", "Electrical", 3, 6, "2026-06-19", "14:00", "Block B - Hall 104", 180, "End-Semester")
+    ]
+    cursor.executemany(
+        "INSERT INTO exams (subject_code, subject, department, year_of_study, semester, exam_date, exam_time, venue, duration_minutes, exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        exams
+    )
+    print("[Seeded] Seeded examination schedules into 'exams'.")
 
-    # Seeding timetable (CSE, Electronics, Mechanical)
-    if is_empty("timetable"):
-        timetable = [
-            ("CSE", 3, "Monday", "Artificial Intelligence", "09:00", "10:30", "Block A - 301", "Dr. Anand Rao"),
-            ("CSE", 3, "Monday", "Software Engineering", "10:45", "12:15", "Block A - 301", "Prof. Shalini Sen"),
-            ("Electronics", 2, "Tuesday", "Analog Circuits", "11:00", "12:30", "Block B - 102", "Dr. S. K. Verma"),
-            ("Mechanical", 4, "Wednesday", "CAD/CAM Lab", "14:00", "17:00", "Mechanical Lab Floor 1", "Prof. Rajesh Nair"),
-            ("CSE", 1, "Thursday", "Mathematics-I", "09:00", "10:30", "Block A - Auditorium 1", "Dr. H. S. Murthy")
-        ]
-        cursor.executemany(
-            "INSERT INTO timetable (department, year_of_study, day_of_week, subject, start_time, end_time, room_no, faculty_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            timetable
-        )
-        print("[Seeded] Seeded 5 class schedules into 'timetable'.")
-    else:
-        print("[Skipped] 'timetable' is already seeded.")
+    # Seeding timetable (including semester)
+    # Target dataset for CSE, Year 2, Semester 4
+    timetable = [
+        ("CSE", 2, 4, "Monday", "Computer Networks", "09:00", "10:30", "Block A - 301", "Dr. S. R. Patil"),
+        ("CSE", 2, 4, "Monday", "Operating Systems", "10:45", "12:15", "Block A - 301", "Prof. M. A. Deshmukh"),
+        ("CSE", 2, 4, "Tuesday", "Database Management Systems", "09:00", "10:30", "Block A - 301", "Dr. Anand Rao"),
+        ("CSE", 2, 4, "Tuesday", "Software Engineering", "10:45", "12:15", "Block A - 301", "Prof. Shalini Sen"),
+        ("CSE", 2, 4, "Wednesday", "Computer Networks Lab", "14:00", "17:00", "CSE Lab 2", "Dr. S. R. Patil"),
+        ("CSE", 2, 4, "Thursday", "Operating Systems Lab", "09:00", "12:00", "CSE Lab 3", "Prof. M. A. Deshmukh"),
+        ("CSE", 2, 4, "Friday", "Database Management Systems Lab", "10:45", "13:45", "CSE Lab 1", "Dr. Anand Rao"),
+        # Other semesters / departments
+        ("Electronics", 2, 4, "Tuesday", "Analog Circuits", "11:00", "12:30", "Block B - 102", "Dr. S. K. Verma"),
+        ("Mechanical", 4, 8, "Wednesday", "CAD/CAM Lab", "14:00", "17:00", "Mechanical Lab Floor 1", "Prof. Rajesh Nair"),
+        ("CSE", 1, 2, "Thursday", "Mathematics-II", "09:00", "10:30", "Block A - Auditorium 1", "Dr. H. S. Murthy")
+    ]
+    cursor.executemany(
+        "INSERT INTO timetable (department, year_of_study, semester, day_of_week, subject, start_time, end_time, room_no, faculty_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        timetable
+    )
+    print("[Seeded] Seeded class schedules into 'timetable'.")
 
-    # Seeding faq (Rajarambapu Institute of Technology (RIT) references)
+    # Seeding faq
     if is_empty("faq"):
         faqs = [
             ("What are the college library timings?", "The Central Library of Rajarambapu Institute of Technology (RIT) is open from 8:00 AM to 8:00 PM on weekdays, and 9:00 AM to 4:00 PM on Saturdays. It remains closed on Sundays and official holidays.", "student_query", "library, timings, hours, books", 15),
@@ -246,10 +251,8 @@ def init_database():
             faqs
         )
         print("[Seeded] Seeded 5 FAQs into 'faq'.")
-    else:
-        print("[Skipped] 'faq' is already seeded.")
 
-    # Seeding student_queries (Reflects Rajarambapu Institute of Technology / RIT)
+    # Seeding student_queries
     if is_empty("student_queries"):
         student_queries = [
             ("What are the eligibility criteria for CSE?", "For B.Tech Computer Science and Engineering, the eligibility is 10+2 with Physics, Chemistry, Mathematics (min 60%) and a valid JEE Main or RIT Entrance score.", "admission", 0.95, "sess_abc123"),
@@ -263,8 +266,6 @@ def init_database():
             student_queries
         )
         print("[Seeded] Seeded 5 student query records into 'student_queries'.")
-    else:
-        print("[Skipped] 'student_queries' is already seeded.")
 
     # Commit changes and close
     conn.commit()

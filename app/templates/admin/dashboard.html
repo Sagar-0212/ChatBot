@@ -277,13 +277,62 @@
                 </div>
                 <button class="add-faq-btn" onclick="openExamModal()"><i class="bx bx-plus"></i> Add New Exam</button>
             </div>
+
+            <!-- Exam Schedule Live Preview -->
+            <div class="preview-card-section">
+                <div class="preview-card-header">
+                    <h3><i class="bx bx-calendar-event"></i> Exam Schedule Preview</h3>
+                    <div class="preview-filters">
+                        <div class="filter-group">
+                            <label for="preview-exam-dept">Dept</label>
+                            <select id="preview-exam-dept" onchange="renderExamsPreview()">
+                                <option value="CSE">CSE</option>
+                                <option value="IT">IT</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Electronics">Electronics</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="preview-exam-year">Year</label>
+                            <select id="preview-exam-year" onchange="renderExamsPreview()">
+                                <option value="1">1st Year</option>
+                                <option value="2" selected>2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="preview-exam-sem">Sem</label>
+                            <select id="preview-exam-sem" onchange="renderExamsPreview()">
+                                <option value="1">Sem I</option>
+                                <option value="2">Sem II</option>
+                                <option value="3">Sem III</option>
+                                <option value="4" selected>Sem IV</option>
+                                <option value="5">Sem V</option>
+                                <option value="6">Sem VI</option>
+                                <option value="7">Sem VII</option>
+                                <option value="8">Sem VIII</option>
+                            </select>
+                        </div>
+                        <button class="preview-action-btn" onclick="printFilteredExams()" title="Print Exam Schedule"><i class="bx bx-printer"></i></button>
+                    </div>
+                </div>
+                <div id="exam-preview-container" class="preview-schedule-box">
+                    <!-- Dynamic exam schedule renders here -->
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th>Code</th>
                             <th>Subject</th>
                             <th>Department</th>
                             <th>Year</th>
+                            <th>Semester</th>
                             <th>Exam Date</th>
                             <th>Exam Time</th>
                             <th>Venue / Room</th>
@@ -296,16 +345,18 @@
                         {% if exams %}
                             {% for exam in exams %}
                             <tr id="exam-row-{{ exam.id }}">
+                                <td><code>{{ exam.subject_code }}</code></td>
                                 <td><strong>{{ exam.subject }}</strong></td>
                                 <td>{{ exam.department }}</td>
                                 <td>Year {{ exam.year_of_study }}</td>
+                                <td>Sem {{ exam.semester }}</td>
                                 <td>{{ exam.exam_date }}</td>
                                 <td>{{ exam.exam_time }}</td>
                                 <td>{{ exam.venue }}</td>
                                 <td>{{ exam.duration_minutes }} mins</td>
                                 <td><span class="badge-exam">{{ exam.exam_type }}</span></td>
                                 <td class="actions-cell">
-                                    <button class="action-btn edit-btn" onclick="editExam('{{ exam.id }}', '{{ exam.subject | escape }}', '{{ exam.department | escape }}', '{{ exam.year_of_study }}', '{{ exam.exam_date | escape }}', '{{ exam.exam_time | escape }}', '{{ exam.venue | escape }}', '{{ exam.duration_minutes }}', '{{ exam.exam_type | escape }}')" title="Edit Exam">
+                                    <button class="action-btn edit-btn" onclick="editExam('{{ exam.id }}', '{{ exam.subject_code | escape }}', '{{ exam.subject | escape }}', '{{ exam.department | escape }}', '{{ exam.year_of_study }}', '{{ exam.semester }}', '{{ exam.exam_date | escape }}', '{{ exam.exam_time | escape }}', '{{ exam.venue | escape }}', '{{ exam.duration_minutes }}', '{{ exam.exam_type | escape }}')" title="Edit Exam">
                                         <i class="bx bx-edit"></i>
                                     </button>
                                     <button class="action-btn delete-btn" onclick="deleteExam('{{ exam.id }}')" title="Delete Exam">
@@ -316,7 +367,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="9" class="no-records">No examinations scheduled.</td>
+                                <td colspan="11" class="no-records">No examinations scheduled.</td>
                             </tr>
                         {% endif %}
                     </tbody>
@@ -333,6 +384,53 @@
                 </div>
                 <button class="add-faq-btn" onclick="openTimetableModal()"><i class="bx bx-plus"></i> Add New Slot</button>
             </div>
+
+            <!-- Timetable Live Preview Grid -->
+            <div class="preview-card-section">
+                <div class="preview-card-header">
+                    <h3><i class="bx bx-time-five"></i> Timetable Grid Preview</h3>
+                    <div class="preview-filters">
+                        <div class="filter-group">
+                            <label for="preview-tt-dept">Dept</label>
+                            <select id="preview-tt-dept" onchange="renderTimetablePreview()">
+                                <option value="CSE">CSE</option>
+                                <option value="IT">IT</option>
+                                <option value="Mechanical">Mechanical</option>
+                                <option value="Civil">Civil</option>
+                                <option value="Electrical">Electrical</option>
+                                <option value="Electronics">Electronics</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="preview-tt-year">Year</label>
+                            <select id="preview-tt-year" onchange="renderTimetablePreview()">
+                                <option value="1">1st Year</option>
+                                <option value="2" selected>2nd Year</option>
+                                <option value="3">3rd Year</option>
+                                <option value="4">4th Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="preview-tt-sem">Sem</label>
+                            <select id="preview-tt-sem" onchange="renderTimetablePreview()">
+                                <option value="1">Sem I</option>
+                                <option value="2">Sem II</option>
+                                <option value="3">Sem III</option>
+                                <option value="4" selected>Sem IV</option>
+                                <option value="5">Sem V</option>
+                                <option value="6">Sem VI</option>
+                                <option value="7">Sem VII</option>
+                                <option value="8">Sem VIII</option>
+                            </select>
+                        </div>
+                        <button class="preview-action-btn" onclick="printFilteredTimetable()" title="Print Timetable Grid"><i class="bx bx-printer"></i></button>
+                    </div>
+                </div>
+                <div id="timetable-preview-container" class="preview-schedule-box">
+                    <!-- Dynamic weekly grid renders here -->
+                </div>
+            </div>
+
             <div class="table-container">
                 <table class="data-table">
                     <thead>
@@ -340,6 +438,7 @@
                             <th>Day</th>
                             <th>Department</th>
                             <th>Year</th>
+                            <th>Semester</th>
                             <th>Subject</th>
                             <th>Timing</th>
                             <th>Room No</th>
@@ -354,12 +453,13 @@
                                 <td><strong>{{ slot.day_of_week }}</strong></td>
                                 <td>{{ slot.department }}</td>
                                 <td>Year {{ slot.year_of_study }}</td>
+                                <td>Sem {{ slot.semester }}</td>
                                 <td>{{ slot.subject }}</td>
                                 <td>{{ slot.start_time }} - {{ slot.end_time }}</td>
                                 <td>{{ slot.room_no }}</td>
                                 <td>{{ slot.faculty_name }}</td>
                                 <td class="actions-cell">
-                                    <button class="action-btn edit-btn" onclick="editTimetable('{{ slot.id }}', '{{ slot.department | escape }}', '{{ slot.year_of_study }}', '{{ slot.day_of_week | escape }}', '{{ slot.subject | escape }}', '{{ slot.start_time | escape }}', '{{ slot.end_time | escape }}', '{{ slot.room_no | escape }}', '{{ slot.faculty_name | escape }}')" title="Edit Slot">
+                                    <button class="action-btn edit-btn" onclick="editTimetable('{{ slot.id }}', '{{ slot.department | escape }}', '{{ slot.year_of_study }}', '{{ slot.semester }}', '{{ slot.day_of_week | escape }}', '{{ slot.subject | escape }}', '{{ slot.start_time | escape }}', '{{ slot.end_time | escape }}', '{{ slot.room_no | escape }}', '{{ slot.faculty_name | escape }}')" title="Edit Slot">
                                         <i class="bx bx-edit"></i>
                                     </button>
                                     <button class="action-btn delete-btn" onclick="deleteTimetable('{{ slot.id }}')" title="Delete Slot">
@@ -370,7 +470,7 @@
                             {% endfor %}
                         {% else %}
                             <tr>
-                                <td colspan="8" class="no-records">No timetable entries available.</td>
+                                <td colspan="9" class="no-records">No timetable entries available.</td>
                             </tr>
                         {% endif %}
                     </tbody>
@@ -495,10 +595,17 @@
             
             <div class="form-row-2">
                 <div class="input-group">
-                    <label for="exam-subject">Subject</label>
-                    <input type="text" id="exam-subject" name="subject" placeholder="e.g. Data Structures" required />
+                    <label for="exam-subject-code">Subject Code</label>
+                    <input type="text" id="exam-subject-code" name="subject_code" placeholder="e.g. CS-204" required />
                 </div>
 
+                <div class="input-group">
+                    <label for="exam-subject">Subject Name</label>
+                    <input type="text" id="exam-subject" name="subject" placeholder="e.g. Computer Networks" required />
+                </div>
+            </div>
+
+            <div class="form-row-3">
                 <div class="input-group">
                     <label for="exam-department">Department</label>
                     <select id="exam-department" name="department" required>
@@ -510,33 +617,36 @@
                         <option value="Electronics">Electronics</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="form-row-2">
                 <div class="input-group">
                     <label for="exam-year">Year of Study</label>
                     <input type="number" min="1" max="4" id="exam-year" name="year_of_study" placeholder="e.g. 2" required />
                 </div>
 
                 <div class="input-group">
-                    <label for="exam-type">Exam Category / Type</label>
-                    <input type="text" id="exam-type" name="exam_type" placeholder="e.g. End-Semester" required />
+                    <label for="exam-semester">Semester</label>
+                    <input type="number" min="1" max="8" id="exam-semester" name="semester" placeholder="e.g. 4" required />
                 </div>
             </div>
 
             <div class="form-row-2">
+                <div class="input-group">
+                    <label for="exam-type">Exam Category / Type</label>
+                    <input type="text" id="exam-type" name="exam_type" placeholder="e.g. End-Semester" required />
+                </div>
+
                 <div class="input-group">
                     <label for="exam-date">Exam Date</label>
                     <input type="text" id="exam-date" name="exam_date" placeholder="e.g. 2026-06-15" required />
                 </div>
+            </div>
 
+            <div class="form-row-3">
                 <div class="input-group">
                     <label for="exam-time">Exam Time</label>
                     <input type="text" id="exam-time" name="exam_time" placeholder="e.g. 10:00" required />
                 </div>
-            </div>
 
-            <div class="form-row-2">
                 <div class="input-group">
                     <label for="exam-venue">Venue / Room</label>
                     <input type="text" id="exam-venue" name="venue" placeholder="e.g. Block A - Hall 202" required />
@@ -575,6 +685,13 @@
                 </div>
 
                 <div class="input-group">
+                    <label for="timetable-room">Room No / Lab</label>
+                    <input type="text" id="timetable-room" name="room_no" placeholder="e.g. Block A - 301" required />
+                </div>
+            </div>
+
+            <div class="form-row-3">
+                <div class="input-group">
                     <label for="timetable-department">Department</label>
                     <select id="timetable-department" name="department" required>
                         <option value="CSE">CSE</option>
@@ -585,14 +702,19 @@
                         <option value="Electronics">Electronics</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="form-row-2">
                 <div class="input-group">
                     <label for="timetable-year">Year of Study</label>
                     <input type="number" min="1" max="4" id="timetable-year" name="year_of_study" placeholder="e.g. 3" required />
                 </div>
 
+                <div class="input-group">
+                    <label for="timetable-semester">Semester</label>
+                    <input type="number" min="1" max="8" id="timetable-semester" name="semester" placeholder="e.g. 6" required />
+                </div>
+            </div>
+
+            <div class="form-row-3">
                 <div class="input-group">
                     <label for="timetable-day">Day of Week</label>
                     <select id="timetable-day" name="day_of_week" required>
@@ -604,9 +726,7 @@
                         <option value="Saturday">Saturday</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="form-row-2">
                 <div class="input-group">
                     <label for="timetable-start">Start Time</label>
                     <input type="text" id="timetable-start" name="start_time" placeholder="e.g. 09:00" required />
@@ -620,11 +740,6 @@
 
             <div class="form-row-2">
                 <div class="input-group">
-                    <label for="timetable-room">Room No / Lab</label>
-                    <input type="text" id="timetable-room" name="room_no" placeholder="e.g. Block A - 301" required />
-                </div>
-
-                <div class="input-group">
                     <label for="timetable-faculty">Faculty Name</label>
                     <input type="text" id="timetable-faculty" name="faculty_name" placeholder="e.g. Prof. Nair" required />
                 </div>
@@ -637,6 +752,12 @@
         </form>
     </div>
 </div>
+
+<script>
+    // Embed active records directly for live, zero-latency dashboard preview rendering
+    const allExamsData = {{ exams | tojson | safe }};
+    const allTimetableData = {{ timetable | tojson | safe }};
+</script>
 {% endblock %}
 
 {% block scripts %}

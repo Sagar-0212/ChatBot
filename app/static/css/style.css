@@ -1309,3 +1309,492 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* ==========================================
+   12. WEEKLY TIMETABLE GRID & SCHEDULES PORTAL
+   ========================================== */
+
+.schedules-page-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    max-width: 1300px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.schedules-filters-bar {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: var(--shadow-premium);
+    backdrop-filter: blur(10px);
+}
+
+.filters-header h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.filters-header p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.filters-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    align-items: flex-end;
+}
+
+.filter-dropdown {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 180px;
+    flex: 1;
+}
+
+.filter-dropdown label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.filter-dropdown select {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    transition: var(--transition-smooth);
+}
+
+.filter-dropdown select:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+}
+
+.schedules-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+.action-btn-print,
+.action-btn-pdf,
+.preview-action-btn {
+    padding: 0.65rem 1.2rem;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: var(--transition-smooth);
+}
+
+.action-btn-print {
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.action-btn-print:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.action-btn-pdf {
+    background: var(--accent-gradient);
+    color: #fff;
+}
+
+.action-btn-pdf:hover {
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+.printable-schedule-container {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow-premium);
+    backdrop-filter: blur(10px);
+}
+
+/* Printable Header Details */
+.schedule-print-header {
+    margin-bottom: 2rem;
+    border-bottom: 2px solid var(--border-color);
+    padding-bottom: 1.5rem;
+}
+
+.college-branding {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.college-branding h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.college-branding p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.header-divider {
+    border: 0;
+    height: 1px;
+    background: var(--border-color);
+    margin: 1rem 0;
+}
+
+.schedule-metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    font-size: 1rem;
+    color: var(--text-secondary);
+}
+
+.schedule-metadata-grid span {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.schedule-section {
+    margin-bottom: 3rem;
+}
+
+.section-title-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 1.25rem;
+    border-left: 4px solid var(--accent-purple);
+    padding-left: 0.75rem;
+}
+
+.section-title-bar h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.section-title-bar .sub-indicator {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+/* Timetable grid styling */
+.timetable-grid-table,
+.exam-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.5rem;
+}
+
+.timetable-grid-table th,
+.timetable-grid-table td,
+.exam-schedule-table th,
+.exam-schedule-table td {
+    border: 1px solid var(--border-color);
+    padding: 0.85rem;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.timetable-grid-table th,
+.exam-schedule-table th {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.7px;
+}
+
+.time-slot-cell {
+    background-color: rgba(255, 255, 255, 0.02);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.grid-slot-cell {
+    font-size: 0.8rem;
+    min-width: 160px;
+    height: 100px;
+    transition: var(--transition-smooth);
+}
+
+.empty-slot {
+    color: var(--text-muted);
+    opacity: 0.2;
+}
+
+.active-slot {
+    background-color: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.3) !important;
+}
+
+.active-slot:hover {
+    background-color: rgba(99, 102, 241, 0.14);
+}
+
+.slot-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.slot-subject {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: 0.85rem;
+}
+
+.slot-details-inline {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    gap: 0.15rem;
+}
+
+.slot-room, .slot-faculty {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.slot-room i,
+.slot-faculty i {
+    font-size: 0.8rem;
+    vertical-align: middle;
+    margin-right: 2px;
+}
+
+/* Exam table specific styling */
+.exam-schedule-table td {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.exam-schedule-table td strong {
+    color: var(--text-primary);
+}
+
+.exam-schedule-table code {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border-color);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    color: var(--accent-purple);
+    font-weight: 600;
+}
+
+.badge-exam-cell {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--status-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    padding: 0.15rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Preview sections in admin dashboard */
+.preview-card-section {
+    background-color: rgba(255, 255, 255, 0.01);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.preview-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.preview-card-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.preview-filters {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.preview-filters .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.preview-filters label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.preview-filters select {
+    background-color: var(--bg-input);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 0.45rem 0.85rem;
+    color: #fff;
+    font-size: 0.8rem;
+    font-family: var(--font-sans);
+}
+
+.preview-action-btn {
+    padding: 0.45rem 0.85rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.preview-action-btn:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.preview-schedule-box {
+    overflow-x: auto;
+}
+
+.empty-preview-state {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+}
+
+.form-row-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+/* Print Specific Rules */
+@media print {
+    body {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+
+    .app-container {
+        display: block !important;
+    }
+
+    .app-header,
+    .app-footer,
+    .no-print,
+    .schedules-filters-bar,
+    .nav-link,
+    .header-nav,
+    .dashboard-nav-panel,
+    .panel-header,
+    .table-container {
+        display: none !important;
+    }
+
+    .app-main-content {
+        padding: 0 !important;
+        margin: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .printable-schedule-container {
+        border: none !important;
+        background-color: #fff !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+    }
+
+    .schedule-print-header {
+        display: block !important;
+        border-bottom: 2px solid #000 !important;
+        color: #000 !important;
+    }
+
+    .college-branding h2 {
+        color: #000 !important;
+    }
+
+    .college-branding p,
+    .schedule-metadata-grid,
+    .section-title-bar .sub-indicator {
+        color: #333 !important;
+    }
+
+    .timetable-grid-table th,
+    .timetable-grid-table td,
+    .exam-schedule-table th,
+    .exam-schedule-table td {
+        border: 1px solid #333 !important;
+        color: #000 !important;
+        background-color: transparent !important;
+    }
+
+    .active-slot {
+        background-color: #f0f0f0 !important;
+        border: 1px solid #333 !important;
+    }
+
+    .slot-subject {
+        color: #000 !important;
+    }
+
+    .slot-details-inline {
+        color: #333 !important;
+    }
+
+    .exam-schedule-table code {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 0 !important;
+        color: #000 !important;
+    }
+
+    .badge-exam-cell {
+        border: 1px solid #333 !important;
+        color: #000 !important;
+        background-color: transparent !important;
+    }
+
+    .page-break-before {
+        page-break-before: always;
+    }
+}

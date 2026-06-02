@@ -30,8 +30,11 @@
                 </div>
             </div>
             <nav class="header-nav">
-                <a href="{{ url_for('chat.home') }}" class="nav-link {% if request.blueprint == 'chat' %}active{% endif %}">
+                <a href="{{ url_for('chat.home') }}" class="nav-link {% if request.path == '/' %}active{% endif %}">
                     <i class="bx bx-chat"></i> Chatbot
+                </a>
+                <a href="{{ url_for('chat.schedules') }}" class="nav-link {% if request.path == '/schedules' %}active{% endif %}">
+                    <i class="bx bx-calendar"></i> Schedules
                 </a>
                 {% if session.get('admin_logged_in') %}
                 <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.blueprint == 'admin' %}active{% endif %}">

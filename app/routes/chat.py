@@ -57,3 +57,28 @@ def get_faqs():
     except Exception as e:
         print(f"Failed to fetch FAQs: {e}")
         return jsonify({"error": "Unable to retrieve FAQs"}), 500
+
+@chat_bp.route('/schedules')
+def schedules():
+    """
+    Renders the public Schedules page containing the Timetable grid and Exam schedule.
+    """
+    return render_template('schedules.html')
+
+@chat_bp.route('/api/schedules/exams', methods=['GET'])
+def get_exams_api():
+    """Returns all exams for JSON/AJAX scheduling and filtering."""
+    try:
+        exams = query_db("SELECT * FROM exams ORDER BY exam_date ASC, exam_time ASC")
+        return jsonify([dict(ex) for ex in exams]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@chat_bp.route('/api/schedules/timetable', methods=['GET'])
+def get_timetable_api():
+    """Returns all timetable slots for JSON/AJAX scheduling and filtering."""
+    try:
+        timetable = query_db("SELECT * FROM timetable ORDER BY day_of_week, start_time ASC")
+        return jsonify([dict(slot) for slot in timetable]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

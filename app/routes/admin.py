@@ -222,22 +222,24 @@ def add_exam():
     if not is_admin_logged_in():
         return jsonify({"error": "Unauthorized"}), 401
         
+    subject_code = request.form.get('subject_code', '').strip()
     subject = request.form.get('subject', '').strip()
     department = request.form.get('department', '').strip()
     year_of_study = request.form.get('year_of_study', '1')
+    semester = request.form.get('semester', '1')
     exam_date = request.form.get('exam_date', '').strip()
     exam_time = request.form.get('exam_time', '').strip()
     venue = request.form.get('venue', '').strip()
     duration_minutes = request.form.get('duration_minutes', '180')
     exam_type = request.form.get('exam_type', '').strip()
     
-    if not subject or not department or not exam_date or not exam_time or not venue:
-        return jsonify({"error": "Subject, Department, Date, Time, and Venue are required."}), 400
+    if not subject_code or not subject or not department or not exam_date or not exam_time or not venue:
+        return jsonify({"error": "Subject Code, Subject Name, Department, Date, Time, and Venue are required."}), 400
         
     try:
         insert_db(
-            "INSERT INTO exams (subject, department, year_of_study, exam_date, exam_time, venue, duration_minutes, exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (subject, department, int(year_of_study), exam_date, exam_time, venue, int(duration_minutes), exam_type)
+            "INSERT INTO exams (subject_code, subject, department, year_of_study, semester, exam_date, exam_time, venue, duration_minutes, exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (subject_code, subject, department, int(year_of_study), int(semester), exam_date, exam_time, venue, int(duration_minutes), exam_type)
         )
         return jsonify({"message": "Exam scheduled successfully!"}), 201
     except Exception as e:
@@ -249,22 +251,24 @@ def update_exam(exam_id):
     if not is_admin_logged_in():
         return jsonify({"error": "Unauthorized"}), 401
         
+    subject_code = request.form.get('subject_code', '').strip()
     subject = request.form.get('subject', '').strip()
     department = request.form.get('department', '').strip()
     year_of_study = request.form.get('year_of_study', '1')
+    semester = request.form.get('semester', '1')
     exam_date = request.form.get('exam_date', '').strip()
     exam_time = request.form.get('exam_time', '').strip()
     venue = request.form.get('venue', '').strip()
     duration_minutes = request.form.get('duration_minutes', '180')
     exam_type = request.form.get('exam_type', '').strip()
     
-    if not subject or not department or not exam_date or not exam_time or not venue:
-        return jsonify({"error": "Subject, Department, Date, Time, and Venue are required."}), 400
+    if not subject_code or not subject or not department or not exam_date or not exam_time or not venue:
+        return jsonify({"error": "Subject Code, Subject Name, Department, Date, Time, and Venue are required."}), 400
         
     try:
         insert_db(
-            "UPDATE exams SET subject = ?, department = ?, year_of_study = ?, exam_date = ?, exam_time = ?, venue = ?, duration_minutes = ?, exam_type = ? WHERE id = ?",
-            (subject, department, int(year_of_study), exam_date, exam_time, venue, int(duration_minutes), exam_type, exam_id)
+            "UPDATE exams SET subject_code = ?, subject = ?, department = ?, year_of_study = ?, semester = ?, exam_date = ?, exam_time = ?, venue = ?, duration_minutes = ?, exam_type = ? WHERE id = ?",
+            (subject_code, subject, department, int(year_of_study), int(semester), exam_date, exam_time, venue, int(duration_minutes), exam_type, exam_id)
         )
         return jsonify({"message": "Exam schedule updated successfully!"}), 200
     except Exception as e:
@@ -294,6 +298,7 @@ def add_timetable():
         
     department = request.form.get('department', '').strip()
     year_of_study = request.form.get('year_of_study', '1')
+    semester = request.form.get('semester', '1')
     day_of_week = request.form.get('day_of_week', '').strip()
     subject = request.form.get('subject', '').strip()
     start_time = request.form.get('start_time', '').strip()
@@ -306,8 +311,8 @@ def add_timetable():
         
     try:
         insert_db(
-            "INSERT INTO timetable (department, year_of_study, day_of_week, subject, start_time, end_time, room_no, faculty_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (department, int(year_of_study), day_of_week, subject, start_time, end_time, room_no, faculty_name)
+            "INSERT INTO timetable (department, year_of_study, semester, day_of_week, subject, start_time, end_time, room_no, faculty_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (department, int(year_of_study), int(semester), day_of_week, subject, start_time, end_time, room_no, faculty_name)
         )
         return jsonify({"message": "Timetable slot added successfully!"}), 201
     except Exception as e:
@@ -321,6 +326,7 @@ def update_timetable(slot_id):
         
     department = request.form.get('department', '').strip()
     year_of_study = request.form.get('year_of_study', '1')
+    semester = request.form.get('semester', '1')
     day_of_week = request.form.get('day_of_week', '').strip()
     subject = request.form.get('subject', '').strip()
     start_time = request.form.get('start_time', '').strip()
@@ -333,8 +339,8 @@ def update_timetable(slot_id):
         
     try:
         insert_db(
-            "UPDATE timetable SET department = ?, year_of_study = ?, day_of_week = ?, subject = ?, start_time = ?, end_time = ?, room_no = ?, faculty_name = ? WHERE id = ?",
-            (department, int(year_of_study), day_of_week, subject, start_time, end_time, room_no, faculty_name, slot_id)
+            "UPDATE timetable SET department = ?, year_of_study = ?, semester = ?, day_of_week = ?, subject = ?, start_time = ?, end_time = ?, room_no = ?, faculty_name = ? WHERE id = ?",
+            (department, int(year_of_study), int(semester), day_of_week, subject, start_time, end_time, room_no, faculty_name, slot_id)
         )
         return jsonify({"message": "Timetable slot updated successfully!"}), 200
     except Exception as e:

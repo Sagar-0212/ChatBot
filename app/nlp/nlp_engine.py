@@ -175,7 +175,7 @@ class NLPEngine:
                 # If no specific department matched, show all upcoming exams
                 display_list = filtered_exams if filtered_exams else exams
                 exam_details = [
-                    f"• {ex['subject']} ({ex['exam_type']}) - Date: {ex['exam_date']} at {ex['exam_time']} | Venue: {ex['venue']} | Duration: {ex['duration_minutes']} mins"
+                    f"• {ex['subject_code']}: {ex['subject']} (Sem {ex['semester']}, {ex['exam_type']}) - Date: {ex['exam_date']} at {ex['exam_time']} | Venue: {ex['venue']} | Duration: {ex['duration_minutes']} mins"
                     for ex in display_list
                 ]
                 response = "Here is the upcoming examination schedule at RIT:\n" + "\n".join(exam_details)
@@ -198,7 +198,7 @@ class NLPEngine:
                 # If no specific department matched, show all class slots
                 display_slots = filtered_slots if filtered_slots else timetable
                 slots_text = [
-                    f"• {slot['subject']} ({slot['day_of_week']}): {slot['start_time']} - {slot['end_time']} | Room: {slot['room_no']} | Faculty: {slot['faculty_name']}"
+                    f"• {slot['subject']} (Sem {slot['semester']}, {slot['day_of_week']}): {slot['start_time']} - {slot['end_time']} | Room: {slot['room_no']} | Faculty: {slot['faculty_name']}"
                     for slot in display_slots
                 ]
                 response = "Here is the class timetable at RIT:\n" + "\n".join(slots_text)

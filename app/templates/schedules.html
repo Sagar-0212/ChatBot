@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}RIT Academic & Examination Schedules{% endblock %}
+
+{% block head %}
+<!-- Include html2pdf library from CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-GsLlZN/3F2ErC5IfS3Q/GoKYTXRIuMZzy368oSQ6CDltRlCoOmypUMUVFKGrBHuhYhdm9YiQH84T0xIGCx9EQA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{% endblock %}
+
+{% block content %}
+<div class="schedules-page-wrapper">
+    <!-- Header Controls and Filters -->
+    <div class="schedules-filters-bar no-print">
+        <div class="filters-header">
+            <h2><i class="bx bx-calendar"></i> Academic Schedules Portal</h2>
+            <p>Filter by your division details to view class timetables and exam date sheets.</p>
+        </div>
+        
+        <div class="filters-controls">
+            <div class="filter-dropdown">
+                <label for="filter-dept">Department</label>
+                <select id="filter-dept" onchange="onFilterChange()">
+                    <option value="CSE">CSE (Computer Science & Engineering)</option>
+                    <option value="IT">IT (Information Technology)</option>
+                    <option value="Mechanical">Mechanical Engineering</option>
+                    <option value="Civil">Civil Engineering</option>
+                    <option value="Electrical">Electrical Engineering</option>
+                    <option value="Electronics">Electronics Engineering</option>
+                </select>
+            </div>
+            
+            <div class="filter-dropdown">
+                <label for="filter-year">Year</label>
+                <select id="filter-year" onchange="onFilterChange()">
+                    <option value="1">1st Year</option>
+                    <option value="2" selected>2nd Year</option>
+                    <option value="3">3rd Year</option>
+                    <option value="4">4th Year</option>
+                </select>
+            </div>
+            
+            <div class="filter-dropdown">
+                <label for="filter-sem">Semester</label>
+                <select id="filter-sem" onchange="onFilterChange()">
+                    <option value="1">Semester I</option>
+                    <option value="2">Semester II</option>
+                    <option value="3">Semester III</option>
+                    <option value="4" selected>Semester IV</option>
+                    <option value="5">Semester V</option>
+                    <option value="6">Semester VI</option>
+                    <option value="7">Semester VII</option>
+                    <option value="8">Semester VIII</option>
+                </select>
+            </div>
+            
+            <div class="schedules-actions">
+                <button class="action-btn-print" onclick="window.print()" title="Print Schedules">
+                    <i class="bx bx-printer"></i> Print Page
+                </button>
+                <button id="btn-export-pdf" class="action-btn-pdf" onclick="exportToPDF()" title="Export Schedule to PDF">
+                    <i class="bx bxs-file-pdf"></i> Export to PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Schedule Container -->
+    <div id="printable-schedule-area" class="printable-schedule-container">
+        <!-- PDF/Print Metadata Header (Dynamically updated) -->
+        <div class="schedule-print-header">
+            <div class="college-branding">
+                <i class="bx bxs-graduation logo-icon"></i>
+                <div>
+                    <h2>Rajarambapu Institute of Technology (RIT)</h2>
+                    <p>Rajaramnagar, Sakharale, Maharashtra, India</p>
+                </div>
+            </div>
+            <hr class="header-divider" />
+            <div class="schedule-metadata-grid">
+                <div><strong>Academic Year:</strong> <span id="meta-academic-year">2025-26</span></div>
+                <div><strong>Department:</strong> <span id="meta-department">Computer Science & Engineering</span></div>
+                <div><strong>Semester:</strong> <span id="meta-semester">IV</span></div>
+            </div>
+        </div>
+
+        <!-- Timetable Section -->
+        <section class="schedule-section">
+            <div class="section-title-bar">
+                <h3><i class="bx bx-time-five"></i> Class Timetable</h3>
+                <span class="sub-indicator">Weekly Schedule (Monday to Friday)</span>
+            </div>
+            <div id="timetable-grid-target" class="grid-table-responsive">
+                <!-- Class timetable weekly grid goes here -->
+            </div>
+        </section>
+
+        <!-- Exam Schedule Section -->
+        <section class="schedule-section page-break-before">
+            <div class="section-title-bar">
+                <h3><i class="bx bx-calendar-event"></i> Examination Date Sheet</h3>
+                <span class="sub-indicator">Date-wise Term Examination Schedule</span>
+            </div>
+            <div id="exams-table-target" class="grid-table-responsive">
+                <!-- Date-wise exam table goes here -->
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let allExams = [];
+    let allTimetable = [];
+
+    // Map Department abbreviations to full college titles
+    const DEPT_MAP = {
+        "CSE": "Computer Science & Engineering",
+        "IT": "Information Technology",
+        "Mechanical": "Mechanical Engineering",
+        "Civil": "Civil Engineering",
+        "Electrical": "Electrical Engineering",
+        "Electronics": "Electronics Engineering"
+    };
+
+    // Roman Numerals helper
+    const ROMAN_MAP = ["I", "II", "III", "IV", "V", "VI", "VII", "VIII"];
+
+    document.addEventListener("DOMContentLoaded", function() {
+        // Parse URL query parameters for pre-selected filters
+        const urlParams = new URLSearchParams(window.location.search);
+        const deptParam = urlParams.get('dept');
+        const yearParam = urlParams.get('year');
+        const semParam = urlParams.get('sem');
+
+        if (deptParam) document.getElementById("filter-dept").value = deptParam.toUpperCase();
+        if (yearParam) document.getElementById("filter-year").value = yearParam;
+        if (semParam) document.getElementById("filter-sem").value = semParam;
+
+        // Fetch raw schedules from JSON endpoints
+        Promise.all([
+            fetch("/api/schedules/exams").then(res => res.json()),
+            fetch("/api/schedules/timetable").then(res => res.json())
+        ])
+        .then(([examsData, timetableData]) => {
+            allExams = examsData;
+            allTimetable = timetableData;
+            onFilterChange();
+        })
+        .catch(err => {
+            console.error("Error loading schedules datasets:", err);
+        });
+    });
+
+    function onFilterChange() {
+        const dept = document.getElementById("filter-dept").value;
+        const year = parseInt(document.getElementById("filter-year").value);
+        const sem = parseInt(document.getElementById("filter-sem").value);
+
+        // Update display metadata headers
+        document.getElementById("meta-department").textContent = DEPT_MAP[dept] || dept;
+        document.getElementById("meta-semester").textContent = ROMAN_MAP[sem - 1] || sem;
+
+        // Filter datasets
+        const filteredExams = allExams.filter(ex => 
+            ex.department === dept && ex.year_of_study === year && ex.semester === sem
+        );
+        
+        const filteredTimetable = allTimetable.filter(slot => 
+            slot.department === dept && slot.year_of_study === year && slot.semester === sem
+        );
+
+        // Render targets
+        renderTimetableGrid(filteredTimetable);
+        renderExamsTable(filteredExams);
+    }
+
+    function renderTimetableGrid(slots) {
+        const target = document.getElementById("timetable-grid-target");
+        if (slots.length === 0) {
+            target.innerHTML = `<div class="empty-preview-state">No timetable entries available for the selected criteria.</div>`;
+            return;
+        }
+
+        // Get unique time slots and sort them chronologically
+        const timeSlotsSet = new Set();
+        slots.forEach(s => timeSlotsSet.add(`${s.start_time} - ${s.end_time}`));
+        const timeSlots = Array.from(timeSlotsSet).sort((a, b) => {
+            const timeA = a.split(" - ")[0];
+            const timeB = b.split(" - ")[0];
+            return timeA.localeCompare(timeB);
+        });
+
+        const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+        let html = `
+            <table class="timetable-grid-table">
+                <thead>
+                    <tr>
+                        <th class="time-header">Time Slot</th>
+                        ${days.map(d => `<th>${d}</th>`).join("")}
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        timeSlots.forEach(timeSlot => {
+            html += `<tr>`;
+            html += `<td class="time-slot-cell"><strong>${timeSlot}</strong></td>`;
+            
+            days.forEach(day => {
+                const daySlots = slots.filter(s => 
+                    s.day_of_week.toLowerCase() === day.toLowerCase() && 
+                    `${s.start_time} - ${s.end_time}` === timeSlot
+                );
+
+                if (daySlots.length > 0) {
+                    html += `<td class="grid-slot-cell active-slot">`;
+                    daySlots.forEach(s => {
+                        html += `
+                            <div class="slot-content">
+                                <span class="slot-subject">${s.subject}</span>
+                                <div class="slot-details-inline">
+                                    <span class="slot-room"><i class="bx bx-map"></i> Room: ${s.room_no}</span>
+                                    <span class="slot-faculty" title="Faculty Name"><i class="bx bx-user"></i> ${s.faculty_name}</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    html += `</td>`;
+                } else {
+                    html += `<td class="grid-slot-cell empty-slot">-</td>`;
+                }
+            });
+            html += `</tr>`;
+        });
+
+        html += `</tbody></table>`;
+        target.innerHTML = html;
+    }
+
+    function renderExamsTable(exams) {
+        const target = document.getElementById("exams-table-target");
+        if (exams.length === 0) {
+            target.innerHTML = `<div class="empty-preview-state">No examinations scheduled for the selected criteria.</div>`;
+            return;
+        }
+
+        let html = `
+            <table class="exam-schedule-table">
+                <thead>
+                    <tr>
+                        <th>Subject Code</th>
+                        <th>Subject Name</th>
+                        <th>Exam Date</th>
+                        <th>Time Slot</th>
+                        <th>Venue</th>
+                        <th>Duration</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        exams.forEach(ex => {
+            html += `
+                <tr>
+                    <td><code>${ex.subject_code}</code></td>
+                    <td><strong>${ex.subject}</strong></td>
+                    <td>${ex.exam_date}</td>
+                    <td>${ex.exam_time}</td>
+                    <td>${ex.venue}</td>
+                    <td>${ex.duration_minutes} mins</td>
+                    <td><span class="badge-exam-cell">${ex.exam_type}</span></td>
+                </tr>
+            `;
+        });
+
+        html += `</tbody></table>`;
+        target.innerHTML = html;
+    }
+
+    function exportToPDF() {
+        const element = document.getElementById('printable-schedule-area');
+        
+        // Configuration options for html2pdf
+        const opt = {
+            margin:       0.5,
+            filename:     'RIT_Schedule_' + document.getElementById("filter-dept").value + '_Sem_' + document.getElementById("meta-semester").textContent + '.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { scale: 2, useCORS: true, logging: false },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'landscape' }
+        };
+
+        // Run html2pdf
+        html2pdf().set(opt).from(element).save();
+    }
+</script>
+{% endblock %}

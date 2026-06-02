@@ -213,13 +213,18 @@ function deleteAdmission(progId) {
 // ==========================================
 // EXAMS MODAL & AJAX OPERATIONS
 // ==========================================
+// ==========================================
+// EXAMS MODAL & AJAX OPERATIONS
+// ==========================================
 const examModal = document.getElementById('exam-modal');
 const examForm = document.getElementById('exam-form');
 const examTitle = document.getElementById('exam-modal-title');
 const examIdInput = document.getElementById('exam-id');
+const examSubjectCodeInput = document.getElementById('exam-subject-code');
 const examSubjectInput = document.getElementById('exam-subject');
 const examDeptInput = document.getElementById('exam-department');
 const examYearInput = document.getElementById('exam-year');
+const examSemesterInput = document.getElementById('exam-semester');
 const examTypeInput = document.getElementById('exam-type');
 const examDateInput = document.getElementById('exam-date');
 const examTimeInput = document.getElementById('exam-time');
@@ -237,12 +242,14 @@ function closeExamModal() {
     examModal.classList.remove('active');
 }
 
-function editExam(id, subject, department, yearOfStudy, examDate, examTime, venue, durationMinutes, examType) {
+function editExam(id, subjectCode, subject, department, yearOfStudy, semester, examDate, examTime, venue, durationMinutes, examType) {
     examTitle.textContent = "Edit Exam Schedule";
     examIdInput.value = id;
+    examSubjectCodeInput.value = subjectCode;
     examSubjectInput.value = subject;
     examDeptInput.value = department;
     examYearInput.value = yearOfStudy;
+    examSemesterInput.value = semester;
     examTypeInput.value = examType;
     examDateInput.value = examDate;
     examTimeInput.value = examTime;
@@ -300,6 +307,7 @@ const timetableIdInput = document.getElementById('timetable-id');
 const timetableSubjectInput = document.getElementById('timetable-subject');
 const timetableDeptInput = document.getElementById('timetable-department');
 const timetableYearInput = document.getElementById('timetable-year');
+const timetableSemesterInput = document.getElementById('timetable-semester');
 const timetableDayInput = document.getElementById('timetable-day');
 const timetableStartInput = document.getElementById('timetable-start');
 const timetableEndInput = document.getElementById('timetable-end');
@@ -317,12 +325,13 @@ function closeTimetableModal() {
     timetableModal.classList.remove('active');
 }
 
-function editTimetable(id, department, yearOfStudy, dayOfWeek, subject, startTime, endTime, roomNo, facultyName) {
+function editTimetable(id, department, yearOfStudy, semester, dayOfWeek, subject, startTime, endTime, roomNo, facultyName) {
     timetableTitle.textContent = "Edit Timetable Slot";
     timetableIdInput.value = id;
     timetableSubjectInput.value = subject;
     timetableDeptInput.value = department;
     timetableYearInput.value = yearOfStudy;
+    timetableSemesterInput.value = semester;
     timetableDayInput.value = dayOfWeek;
     timetableStartInput.value = startTime;
     timetableEndInput.value = endTime;
@@ -368,4 +377,150 @@ function deleteTimetable(slotId) {
             else window.location.reload();
         }
     });
+}
+
+// ==========================================
+// INTERACTIVE PREVIEWS & PRINT INTEGRATION
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof allExamsData !== "undefined") {
+        renderExamsPreview();
+    }
+    if (typeof allTimetableData !== "undefined") {
+        renderTimetablePreview();
+    }
+});
+
+function renderExamsPreview() {
+    const dept = document.getElementById("preview-exam-dept").value;
+    const year = parseInt(document.getElementById("preview-exam-year").value);
+    const sem = parseInt(document.getElementById("preview-exam-sem").value);
+    const container = document.getElementById("exam-preview-container");
+
+    const filtered = allExamsData.filter(ex => 
+        ex.department === dept && ex.year_of_study === year && ex.semester === sem
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-preview-state">No examinations scheduled for ${dept} Year ${year} Sem ${sem}.</div>`;
+        return;
+    }
+
+    let html = `
+        <table class="exam-schedule-table">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Exam Date</th>
+                    <th>Time Slot</th>
+                    <th>Venue</th>
+                    <th>Duration</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    filtered.forEach(ex => {
+        html += `
+            <tr>
+                <td><code>${ex.subject_code}</code></td>
+                <td><strong>${ex.subject}</strong></td>
+                <td>${ex.exam_date}</td>
+                <td>${ex.exam_time}</td>
+                <td>${ex.venue}</td>
+                <td>${ex.duration_minutes} mins</td>
+            </tr>
+        `;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+function renderTimetablePreview() {
+    const dept = document.getElementById("preview-tt-dept").value;
+    const year = parseInt(document.getElementById("preview-tt-year").value);
+    const sem = parseInt(document.getElementById("preview-tt-sem").value);
+    const container = document.getElementById("timetable-preview-container");
+
+    const filtered = allTimetableData.filter(slot => 
+        slot.department === dept && slot.year_of_study === year && slot.semester === sem
+    );
+
+    if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty-preview-state">No class slots scheduled for ${dept} Year ${year} Sem ${sem}.</div>`;
+        return;
+    }
+
+    // Extract unique sorted time slots
+    const slotsSet = new Set();
+    filtered.forEach(s => slotsSet.add(`${s.start_time} - ${s.end_time}`));
+    const timeSlots = Array.from(slotsSet).sort((a, b) => {
+        const tA = a.split(" - ")[0];
+        const tB = b.split(" - ")[0];
+        return tA.localeCompare(tB);
+    });
+
+    const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+
+    let html = `
+        <table class="timetable-grid-table">
+            <thead>
+                <tr>
+                    <th>Time Slot</th>
+                    ${days.map(d => `<th>${d}</th>`).join("")}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    timeSlots.forEach(timeSlot => {
+        html += `<tr>`;
+        html += `<td class="time-slot-cell"><strong>${timeSlot}</strong></td>`;
+        
+        days.forEach(day => {
+            const daySlots = filtered.filter(s => 
+                s.day_of_week.toLowerCase() === day.toLowerCase() && 
+                `${s.start_time} - ${s.end_time}` === timeSlot
+            );
+
+            if (daySlots.length > 0) {
+                html += `<td class="grid-slot-cell active-slot">`;
+                daySlots.forEach(s => {
+                    html += `
+                        <div class="slot-content">
+                            <span class="slot-subject">${s.subject}</span>
+                            <div class="slot-details-inline">
+                                <span class="slot-room"><i class="bx bx-map"></i> Room: ${s.room_no}</span>
+                                <span class="slot-faculty" title="Faculty Name"><i class="bx bx-user"></i> ${s.faculty_name}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</td>`;
+            } else {
+                html += `<td class="grid-slot-cell empty-slot">-</td>`;
+            }
+        });
+        html += `</tr>`;
+    });
+
+    html += `</tbody></table>`;
+    container.innerHTML = html;
+}
+
+function printFilteredExams() {
+    const dept = document.getElementById("preview-exam-dept").value;
+    const year = document.getElementById("preview-exam-year").value;
+    const sem = document.getElementById("preview-exam-sem").value;
+    window.open(`/schedules?dept=${dept}&year=${year}&sem=${sem}`, '_blank');
+}
+
+function printFilteredTimetable() {
+    const dept = document.getElementById("preview-tt-dept").value;
+    const year = document.getElementById("preview-tt-year").value;
+    const sem = document.getElementById("preview-tt-sem").value;
+    window.open(`/schedules?dept=${dept}&year=${year}&sem=${sem}`, '_blank');
 }
