@@ -70,8 +70,8 @@ def dashboard():
     faqs = query_db("SELECT * FROM faq ORDER BY created_at DESC")
     students = query_db("SELECT * FROM students LIMIT 100")
     admissions = query_db("SELECT * FROM admissions")
-    timetable = query_db("SELECT * FROM timetable ORDER BY day_of_week, start_time")
-    exams = query_db("SELECT * FROM exams ORDER BY exam_date, exam_time")
+    timetable = [dict(slot) for slot in query_db("SELECT * FROM timetable ORDER BY day_of_week, start_time")]
+    exams = [dict(ex) for ex in query_db("SELECT * FROM exams ORDER BY exam_date, exam_time")]
     
     return render_template(
         'admin/dashboard.html',
